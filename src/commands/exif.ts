@@ -11,7 +11,7 @@ import { ExifTool } from "exiftool-vendored";
 
 function fetchRemoteURLandReturnPath(url: string): Promise<string> {
     const tempDir = fs.mkdtempSync("temp-");
-    const tmpFilename = url.replace(/.*\//, "");
+    const tmpFilename = Math.random().toString(36).slice(-8);
 
     const filePath = path.join(tempDir, tmpFilename);
     const file = fs.createWriteStream(filePath);
@@ -36,7 +36,7 @@ export default {
         .setName("Inspect with ExifTool")
         .setType(ApplicationCommandType.Message),
     async executeMessageContextMenu(
-        interaction: MessageContextMenuCommandInteraction
+        interaction: MessageContextMenuCommandInteraction,
     ) {
         const { attachments } = interaction.targetMessage;
         if (attachments.size === 0) {

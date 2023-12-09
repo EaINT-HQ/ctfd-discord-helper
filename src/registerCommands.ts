@@ -20,7 +20,7 @@ const rest = new REST({ version: "10" }).setToken(token);
         const commands = await getCommandsWithArray();
         console.log(
             "commands:",
-            commands.map((command) => command.name)
+            commands.map((command) => command.name),
         );
 
         await rest.put(Routes.applicationCommands(clientID), {
