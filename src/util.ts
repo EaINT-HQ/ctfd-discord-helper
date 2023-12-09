@@ -14,13 +14,13 @@ export type Command = {
     data: SlashCommandBuilder;
     execute(interaction: ChatInputCommandInteraction<CacheType>): Promise<void>;
     executeAutocomplete?(
-        interaction: AutocompleteInteraction<CacheType>
+        interaction: AutocompleteInteraction<CacheType>,
     ): Promise<void>;
     executeSelectMenu?(
-        interaction: SelectMenuInteraction<CacheType>
+        interaction: SelectMenuInteraction<CacheType>,
     ): Promise<void>;
     executeMessageContextMenu?(
-        interaction: MessageContextMenuCommandInteraction
+        interaction: MessageContextMenuCommandInteraction,
     ): Promise<void>;
 };
 

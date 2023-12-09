@@ -8,7 +8,7 @@ export default {
     data: new SlashCommandBuilder()
         .setName("ac")
         .setDescription(
-            "Mark the current thread as AC. Can only be used inside a thread."
+            "Mark the current thread as AC. Can only be used inside a thread.",
         ),
     async execute(interaction: ChatInputCommandInteraction<CacheType>) {
         const { channel } = interaction;
