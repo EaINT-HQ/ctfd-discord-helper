@@ -5,33 +5,63 @@ import {
     SlashCommandBuilder,
     User,
 } from "discord.js";
-import got from "got";
+import got, { Got } from "got";
 import { setTimeout as wait } from "node:timers/promises";
+import { CtfdResponseChallengeDetail, CtfdResponseChallenges } from "../types";
 
-type CtfdResponse = {
-    success: boolean;
-    data: {
-        id: number;
-        type: string;
-        name: string;
-        value: number;
-        solves: number;
-        solved_by_me: boolean;
-        category: string;
-        tags: string[];
-        template: string;
-        script: string;
-    }[];
-};
-
-async function fetchChallenges(host: string, token: string) {
-    const response = await got(`${host}/api/v1/challenges`, {
+function ctfdCleint(host: string, token: string) {
+    return got.extend({
+        prefixUrl: host,
         headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
         },
-    }).json<CtfdResponse>();
-    return response;
+    });
+}
+
+async function fetchChallengeDetail(client: Got, challengeId: number) {
+    const challengeDetail = await client
+        .get(`api/v1/challenges/${challengeId}`)
+        .json<CtfdResponseChallengeDetail>();
+
+    return challengeDetail;
+}
+async function fetchChallenges(client: Got) {
+    const challenges = await client
+        .get("api/v1/challenges")
+        .json<CtfdResponseChallenges>();
+
+    return challenges;
+}
+
+function createThreadMessage({
+    challenge,
+}: {
+    challenge: CtfdResponseChallengeDetail;
+}) {
+    if (!challenge.success) return;
+
+    const detail = challenge.data;
+
+    const m = [];
+    m.push(
+        "**Description: **\n" +
+            detail.description.replace(
+                // attach > to the beginning of each line
+                /^/gm,
+                "> ",
+            ),
+    );
+
+    if (detail.connection_info) {
+        m.push("**Connection Info: **\n" + `\`${detail.connection_info}\``);
+    }
+
+    if (detail.files.length > 0) {
+        m.push("**Attached Files Existes**");
+    }
+
+    return m.join("\n");
 }
 
 export default {
@@ -122,7 +152,8 @@ export default {
         }
 
         try {
-            const challenges = await fetchChallenges(host, token);
+            const ctfdClient = ctfdCleint(host, token);
+            const challenges = await fetchChallenges(ctfdClient);
             if (!challenges.success) {
                 await interaction.followUp(
                     "Failed to fetch challenges. Invalid token?",
@@ -137,6 +168,20 @@ export default {
                 const thread = await interaction.channel.threads.create({
                     name: `${category} - ${name}`,
                 });
+
+                const detail = await fetchChallengeDetail(
+                    ctfdClient,
+                    challenge.id,
+                );
+
+                const message =
+                    `${host}/challenges#${encodeURIComponent(name)}-${
+                        challenge.id
+                    }\n` + createThreadMessage({ challenge: detail });
+                if (message) {
+                    thread.send(message);
+                }
+
                 thread.members.add(interaction.user);
                 for (const member of members) {
                     thread.members.add(member);
